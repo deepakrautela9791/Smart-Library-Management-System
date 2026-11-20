@@ -1,20 +1,19 @@
 -- Smart Library Management System Database Schema
 
-CREATE DATABASE IF NOT EXISTS smart_library_db;
-USE smart_library_db;
+CREATE DATABASE IF NOT EXISTS sql12841039;
+USE sql12841039;
 
 -- 1. ADMIN Table
 CREATE TABLE IF NOT EXISTS ADMIN (
     AdminID INT PRIMARY KEY AUTO_INCREMENT,
     Username VARCHAR(50) UNIQUE NOT NULL,
     Password VARCHAR(64) NOT NULL,
-    Role ENUM('Administrator', 'User') NOT NULL
+    Role ENUM('Administrator', 'User') DEFAULT 'User'
 );
 
 -- 2. BOOK Table
 CREATE TABLE IF NOT EXISTS BOOK (
     BookID INT PRIMARY KEY AUTO_INCREMENT,
-    ISBN VARCHAR(20) UNIQUE NOT NULL,
     Title VARCHAR(150) NOT NULL,
     Author VARCHAR(100) NOT NULL,
     Category VARCHAR(50) NOT NULL,
@@ -47,20 +46,13 @@ CREATE TABLE IF NOT EXISTS TRANSACTION (
 );
 
 -- Default Users
-INSERT INTO ADMIN (Username, Password, Role) VALUES 
+INSERT INTO ADMIN (Username, Password, Role) VALUES
 ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'Administrator'),
 ('student', '703b0a3d6ad75b649a28adde7d83c6251da457549063adcbc4be1273b0502057', 'User')
 ON DUPLICATE KEY UPDATE Username=Username;
 
 -- Sample Data for Students
 INSERT INTO STUDENT (Name, Course, Semester, Contact) VALUES
-('Rahul Sharma', 'BCA', 4, '9876543210'),
+('Deepak Kumar Rautela', 'BCA', 5, '7819920327'),
 ('Priya Singh', 'BCA', 6, '9876543211')
 ON DUPLICATE KEY UPDATE StudentID=StudentID;
-
--- Sample Data for Books
-INSERT INTO BOOK (ISBN, Title, Author, Category, Price, Status, AdminID) VALUES
-('978-0134685991', 'Effective Java', 'Joshua Bloch', 'Programming', 750.00, 'Available', 1),
-('978-0596009205', 'Head First Java', 'Kathy Sierra', 'Programming', 650.00, 'Available', 1),
-('978-0132350884', 'Clean Code', 'Robert C. Martin', 'Software Engineering', 890.00, 'Available', 1)
-ON DUPLICATE KEY UPDATE BookID=BookID;
