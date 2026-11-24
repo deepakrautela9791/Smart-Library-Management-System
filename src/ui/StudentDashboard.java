@@ -109,7 +109,7 @@ public class StudentDashboard extends JFrame {
         if ("Author".equals(searchBy)) column = "Author";
         else if ("Category".equals(searchBy)) column = "Category";
 
-        String sql = "SELECT BookID, ISBN, Title, Author, Category, Price, Status FROM Book";
+        String sql = "SELECT BookID, ISBN, Title, Author, Category, Price, Status FROM BOOK";
         if (!keyword.isEmpty()) {
             sql += " WHERE " + column + " LIKE ?";
         }
