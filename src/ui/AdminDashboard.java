@@ -294,7 +294,7 @@ public class AdminDashboard extends JFrame {
         topPanel.add(btnPanel, BorderLayout.SOUTH);
         panel.add(topPanel, BorderLayout.NORTH);
 
-        String[] cols = {"Student ID", "Name", "Course", "Semester", "Contact"};
+        String[] cols = {"S.No.", "Name", "Course", "Semester", "Contact", "Student ID"};
         studentTableModel = new DefaultTableModel(cols, 0);
         studentTable = new JTable(studentTableModel);
         studentTable.setRowHeight(24);
@@ -303,7 +303,7 @@ public class AdminDashboard extends JFrame {
         studentTable.getSelectionModel().addListSelectionListener(e -> {
             int row = studentTable.getSelectedRow();
             if (row != -1) {
-                selectedStudentId = Integer.parseInt(studentTableModel.getValueAt(row, 0).toString());
+                selectedStudentId = Integer.parseInt(studentTableModel.getValueAt(row, 5).toString());
                 txtStudentName.setText(String.valueOf(studentTableModel.getValueAt(row, 1)));
                 txtCourse.setText(String.valueOf(studentTableModel.getValueAt(row, 2)));
                 txtSemester.setText(String.valueOf(studentTableModel.getValueAt(row, 3)));
@@ -325,10 +325,12 @@ public class AdminDashboard extends JFrame {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                studentTableModel.addRow(new Object[]{
-                    rs.getInt("StudentID"), rs.getString("Name"),
-                    rs.getString("Course"), rs.getInt("Semester"), rs.getString("Contact")
+                int sno = 1;
+                while (rs.next()) {
+                    studentTableModel.addRow(new Object[]{
+                    sno++, rs.getString("Name"),
+                    rs.getString("Course"), rs.getInt("Semester"),
+                    rs.getString("Contact"), rs.getInt("StudentID")
                 });
             }
         } catch (Exception ex) {
