@@ -45,7 +45,7 @@ public class LoginFrame extends JFrame {
         formPanel.add(txtPassword);
 
         formPanel.add(new JLabel("Role:"));
-        cmbRole = new JComboBox<>(new String[]{"Student", "Administrator"});
+        cmbRole = new JComboBox<>(new String[]{"User", "Administrator"});
         formPanel.add(cmbRole);
 
         add(formPanel, BorderLayout.CENTER);
