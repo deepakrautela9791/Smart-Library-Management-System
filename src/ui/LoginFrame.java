@@ -80,7 +80,7 @@ public class LoginFrame extends JFrame {
 
         try {
             Connection conn = DBConnection.getConnection();
-            String sql = "SELECT * FROM Users WHERE Username = ? AND Password = ? AND Role = ?";
+            String sql = "SELECT * FROM ADMIN WHERE Username = ? AND Password = ? AND Role = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
             stmt.setString(2, SecurityUtil.hashPassword(password));
