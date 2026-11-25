@@ -546,6 +546,35 @@ public class AdminDashboard extends JFrame {
             JOptionPane.showMessageDialog(this, "Error returning book: " + ex.getMessage());
         }
     }
+    private void renewBook() {
+        try {
+            int bookId = Integer.parseInt(txtReturnBookId.getText().trim());
+            try (Connection conn = DBConnection.getConnection()) {
+                PreparedStatement ps = conn.prepareStatement("SELECT TransID, DueDate FROM TRANSACTION WHERE BookID=? AND ReturnDate IS NULL");
+                ps.setInt(1, bookId);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) {
+                    JOptionPane.showMessageDialog(this, "No active issue found for this Book ID!");
+                    return;
+                }
+
+                int transId = rs.getInt("TransID");
+                LocalDate currentDueDate = rs.getDate("DueDate").toLocalDate();
+                LocalDate newDueDate = currentDueDate.plusDays(14);
+
+                PreparedStatement psUpd = conn.prepareStatement("UPDATE TRANSACTION SET DueDate=? WHERE TransID=?");
+                psUpd.setDate(1, Date.valueOf(newDueDate));
+                psUpd.setInt(2, transId);
+                psUpd.executeUpdate();
+
+                JOptionPane.showMessageDialog(this, "Book renewed! New Due Date: " + newDueDate);
+                txtReturnBookId.setText("");
+                loadActiveTransactions();
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error renewing book: " + ex.getMessage());
+        }
+    }
 
     // ==================== 4. REPORTS & AUDITS TAB ====================
     private JPanel createReportsPanel() {
