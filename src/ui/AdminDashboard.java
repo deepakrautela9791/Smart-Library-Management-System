@@ -141,7 +141,7 @@ public class AdminDashboard extends JFrame {
         panel.add(topPanel, BorderLayout.NORTH);
 
         // Table
-        String[] cols = {"Book ID", "ISBN", "Title", "Author", "Category", "Price", "Status"};
+        String[] cols = {"S.No.", "ISBN", "Title", "Author", "Category", "Price", "Status", "Book ID"};
         bookTableModel = new DefaultTableModel(cols, 0);
         bookTable = new JTable(bookTableModel);
         bookTable.setRowHeight(24);
@@ -151,7 +151,7 @@ public class AdminDashboard extends JFrame {
         bookTable.getSelectionModel().addListSelectionListener(e -> {
             int row = bookTable.getSelectedRow();
             if (row != -1) {
-                selectedBookId = Integer.parseInt(bookTableModel.getValueAt(row, 0).toString());
+                selectedBookId = Integer.parseInt(bookTableModel.getValueAt(row, 7).toString());
                 txtIsbn.setText(String.valueOf(bookTableModel.getValueAt(row, 1)));
                 txtTitle.setText(String.valueOf(bookTableModel.getValueAt(row, 2)));
                 txtAuthor.setText(String.valueOf(bookTableModel.getValueAt(row, 3)));
@@ -186,11 +186,12 @@ public class AdminDashboard extends JFrame {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             if (!keyword.isEmpty()) stmt.setString(1, "%" + keyword + "%");
             ResultSet rs = stmt.executeQuery();
+            int sno = 1;
             while (rs.next()) {
                 rows.add(new Object[]{
-                    rs.getInt("BookID"), rs.getString("ISBN"), rs.getString("Title"),
+                    sno++, rs.getString("ISBN"), rs.getString("Title"),
                     rs.getString("Author"), rs.getString("Category"),
-                    rs.getBigDecimal("Price"), rs.getString("Status")
+                    rs.getBigDecimal("Price"), rs.getString("Status"), rs.getInt("BookID")
                 });
             }
             for (Object[] r : rows) bookTableModel.addRow(r);
@@ -588,7 +589,8 @@ public class AdminDashboard extends JFrame {
             "2. Available Books Report",
             "3. Issued Books Report",
             "4. Defaulters / Overdue Report",
-            "5. Daily Transaction Log"
+            "5. Daily Transaction Log",
+            "6. Lost Books Report"
         });
         JButton btnGenerate = styleButton("Generate Report", new Color(41, 128, 185));
         topPanel.add(cmbReportType);
@@ -604,34 +606,40 @@ public class AdminDashboard extends JFrame {
         return panel;
     }
 
-    private void generateReport() {
-        int idx = cmbReportType.getSelectedIndex();
-        String sql = "";
-        switch (idx) {
-            case 0: sql = "SELECT BookID, ISBN, Title, Author, Category, Price, Status FROM BOOK"; break;
-            case 1: sql = "SELECT BookID, ISBN, Title, Author, Category, Price FROM BOOK WHERE Status='Available'"; break;
-            case 2: sql = "SELECT t.TransID, b.Title, s.Name AS Borrower, t.IssueDate, t.DueDate FROM TRANSACTION t JOIN BOOK b ON t.BookID=b.BookID JOIN STUDENT s ON t.StudentID=s.StudentID WHERE t.ReturnDate IS NULL"; break;
-            case 3: sql = "SELECT t.TransID, b.Title, s.Name AS Defaulter, s.Contact, t.DueDate FROM TRANSACTION t JOIN BOOK b ON t.BookID=b.BookID JOIN STUDENT s ON t.StudentID=s.StudentID WHERE t.ReturnDate IS NULL AND t.DueDate < CURDATE()"; break;
-            case 4: sql = "SELECT t.TransID, b.Title, s.Name, t.IssueDate, t.DueDate, t.ReturnDate, t.FineAmount FROM TRANSACTION t JOIN BOOK b ON t.BookID=b.BookID JOIN STUDENT s ON t.StudentID=s.StudentID WHERE t.IssueDate = CURDATE() OR t.ReturnDate = CURDATE()"; break;
-        }
+   private void generateReport() {
+      int idx = cmbReportType.getSelectedIndex();
+      String sql = "";
+      switch (idx) {
+          case 0: sql = "SELECT ISBN, Title, Author, Category, Price, Status, BookID FROM BOOK"; break;
+          case 1: sql = "SELECT ISBN, Title, Author, Category, Price, BookID FROM BOOK WHERE Status='Available'"; break;
+          case 2: sql = "SELECT b.Title, s.Name AS Borrower, t.IssueDate, t.DueDate, t.TransID FROM TRANSACTION t JOIN BOOK b ON t.BookID=b.BookID JOIN STUDENT s ON t.StudentID=s.StudentID WHERE t.ReturnDate IS NULL"; break;
+          case 3: sql = "SELECT b.Title, s.Name AS Defaulter, s.Contact, t.DueDate, t.TransID FROM TRANSACTION t JOIN BOOK b ON t.BookID=b.BookID JOIN STUDENT s ON t.StudentID=s.StudentID WHERE t.ReturnDate IS NULL AND t.DueDate < CURDATE()"; break;
+          case 4: sql = "SELECT b.Title, s.Name, t.IssueDate, t.DueDate, t.ReturnDate, t.FineAmount, t.TransID FROM TRANSACTION t JOIN BOOK b ON t.BookID=b.BookID JOIN STUDENT s ON t.StudentID=s.StudentID WHERE t.IssueDate = CURDATE() OR t.ReturnDate = CURDATE()"; break;
+          case 5: sql = "SELECT ISBN, Title, Author, Category, Price, BookID FROM BOOK WHERE Status='Lost'"; break;
+      }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            ResultSetMetaData meta = rs.getMetaData();
-            int colCount = meta.getColumnCount();
-            reportTableModel.setRowCount(0);
-            reportTableModel.setColumnCount(0);
-            for (int i = 1; i <= colCount; i++) reportTableModel.addColumn(meta.getColumnLabel(i));
-            while (rs.next()) {
-                Object[] row = new Object[colCount];
-                for (int i = 1; i <= colCount; i++) row[i - 1] = rs.getObject(i);
-                reportTableModel.addRow(row);
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error generating report: " + ex.getMessage());
-        }
-    }
+      try (Connection conn = DBConnection.getConnection();
+           PreparedStatement stmt = conn.prepareStatement(sql);
+           ResultSet rs = stmt.executeQuery()) {
+          ResultSetMetaData meta = rs.getMetaData();
+          int colCount = meta.getColumnCount();
+          reportTableModel.setRowCount(0);
+          reportTableModel.setColumnCount(0);
+
+          reportTableModel.addColumn("S.No.");
+          for (int i = 1; i <= colCount; i++) reportTableModel.addColumn(meta.getColumnLabel(i));
+
+          int sno = 1;
+          while (rs.next()) {
+              Object[] row = new Object[colCount + 1];
+              row[0] = sno++;
+              for (int i = 1; i <= colCount; i++) row[i] = rs.getObject(i);
+              reportTableModel.addRow(row);
+          }
+      } catch (Exception ex) {
+          JOptionPane.showMessageDialog(this, "Error generating report: " + ex.getMessage());
+      }
+  }
 
     private JButton styleButton(String text, Color bg) {
         JButton btn = new JButton(text);
