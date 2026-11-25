@@ -414,14 +414,15 @@ public class AdminDashboard extends JFrame {
         issuePanel.add(new JLabel("Student ID:")); issuePanel.add(txtIssueStudentId);
         issuePanel.add(new JLabel("")); issuePanel.add(btnIssue);
 
-        // Return Panel
+        // Return / Renew Panel
         JPanel returnPanel = new JPanel(new GridLayout(3, 2, 8, 8));
-        returnPanel.setBorder(BorderFactory.createTitledBorder("Return Book & Auto Fine"));
+        returnPanel.setBorder(BorderFactory.createTitledBorder("Return / Renew Book"));
         txtReturnBookId = new JTextField();
         JButton btnReturn = styleButton("Return Book", new Color(230, 126, 34));
+        JButton btnRenew = styleButton("Renew Book (+14 Days)", new Color(41, 128, 185));
         returnPanel.add(new JLabel("Book ID:")); returnPanel.add(txtReturnBookId);
         returnPanel.add(new JLabel("")); returnPanel.add(btnReturn);
-        returnPanel.add(new JLabel("")); returnPanel.add(new JLabel(""));
+        returnPanel.add(new JLabel("")); returnPanel.add(btnRenew);
 
         topGrid.add(issuePanel);
         topGrid.add(returnPanel);
@@ -435,6 +436,7 @@ public class AdminDashboard extends JFrame {
 
         btnIssue.addActionListener(e -> issueBook());
         btnReturn.addActionListener(e -> returnBook());
+        btnRenew.addActionListener(e -> renewBook());
 
         return panel;
     }
