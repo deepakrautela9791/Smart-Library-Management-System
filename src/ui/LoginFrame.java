@@ -1,8 +1,7 @@
 package ui;
 
 import db.DBConnection;
-import util.SecurityUtil;
-import util.SessionManager;
+import util.PasswordHasher;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,30 +10,30 @@ import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class LoginFrame extends JFrame {
+
     private JTextField txtUsername;
     private JPasswordField txtPassword;
     private JComboBox<String> cmbRole;
     private JButton btnLogin, btnCancel;
 
     public LoginFrame() {
-        setTitle("Smart Library - Login");
-        setSize(400, 300);
+        setTitle("Smart Library Management System - Login");
+        setSize(400, 260);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setResizable(false);
+        setLayout(new BorderLayout(10, 10));
 
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(new Color(41, 128, 185));
-        JLabel lblTitle = new JLabel("Smart Library System");
+        JLabel lblTitle = new JLabel("Library System Login", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTitle.setForeground(Color.WHITE);
-        headerPanel.add(lblTitle);
-        add(headerPanel, BorderLayout.NORTH);
+        lblTitle.setBorder(BorderFactory.createEmptyBorder(15, 10, 5, 10));
+        add(lblTitle, BorderLayout.NORTH);
 
         JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
 
         formPanel.add(new JLabel("Username:"));
         txtUsername = new JTextField();
@@ -65,7 +64,12 @@ public class LoginFrame extends JFrame {
             }
         });
 
-        btnCancel.addActionListener(e -> System.exit(0));
+        btnCancel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
     }
 
     private void performLogin() {
@@ -74,42 +78,35 @@ public class LoginFrame extends JFrame {
         String role = (String) cmbRole.getSelectedItem();
 
         if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please enter both username and password.", "Validation Error", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        try {
-            Connection conn = DBConnection.getConnection();
-            String sql = "SELECT * FROM ADMIN WHERE Username = ? AND Password = ? AND Role = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, username);
-            stmt.setString(2, SecurityUtil.hashPassword(password));
-            stmt.setString(3, role);
+        String hashedPassword = PasswordHasher.hashPassword(password);
+        String sql = "SELECT AdminID FROM ADMIN WHERE Username = ? AND Password = ? AND Role = ?";
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                int adminId = rs.getInt("AdminID");
-                SessionManager.setSession("username", username);
-                SessionManager.setSession("role", role);
-                SessionManager.setSession("adminId", rs.getInt("AdminID"));
-                JOptionPane.showMessageDialog(this, "Login Successful! Welcome, " + username, "Success", JOptionPane.INFORMATION_MESSAGE);
-                dispose();
-
-                if ("Administrator".equals(role)) {
-                    new AdminDashboard(adminId).setVisible(true);
-                } else {
-                    new StudentDashboard().setVisible(true);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Invalid credentials or role mismatch.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return;
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, username);
+                stmt.setString(2, hashedPassword);
+                stmt.setString(3, role);
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        JOptionPane.showMessageDialog(this, "Login Successful! Welcome " + username, "Success", JOptionPane.INFORMATION_MESSAGE);
+                        dispose();
+                        new DashboardFrame(username, role).setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Invalid username, password, or role.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 }
