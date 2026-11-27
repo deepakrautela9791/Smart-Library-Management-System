@@ -1,0 +1,6 @@
+# Copy this file to db.properties and fill in your MySQL database details.
+# Do NOT commit db.properties to Git.
+
+db.url=jdbc:mysql://localhost:3306/smart_library_db?useSSL=false&serverTimezone=UTC
+db.user=root
+db.password=your_password_here
