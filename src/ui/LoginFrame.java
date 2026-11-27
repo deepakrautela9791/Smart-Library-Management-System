@@ -42,7 +42,33 @@ public class LoginFrame extends JFrame {
 
         formPanel.add(new JLabel("Password:"));
         txtPassword = new JPasswordField();
-        formPanel.add(txtPassword);
+        char defaultEchoChar = txtPassword.getEchoChar();
+
+        JToggleButton btnTogglePassword = new JToggleButton(createEyeIcon(false));
+        btnTogglePassword.setToolTipText("Show Password");
+        btnTogglePassword.setFocusable(false);
+        btnTogglePassword.setBackground(Color.WHITE);
+        btnTogglePassword.setPreferredSize(new Dimension(34, 24));
+        btnTogglePassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnTogglePassword.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (btnTogglePassword.isSelected()) {
+                    txtPassword.setEchoChar((char) 0);
+                    btnTogglePassword.setIcon(createEyeIcon(true));
+                    btnTogglePassword.setToolTipText("Hide Password");
+                } else {
+                    txtPassword.setEchoChar(defaultEchoChar);
+                    btnTogglePassword.setIcon(createEyeIcon(false));
+                    btnTogglePassword.setToolTipText("Show Password");
+                }
+            }
+        });
+
+        JPanel passwordPanel = new JPanel(new BorderLayout(2, 0));
+        passwordPanel.add(txtPassword, BorderLayout.CENTER);
+        passwordPanel.add(btnTogglePassword, BorderLayout.EAST);
+        formPanel.add(passwordPanel);
 
         formPanel.add(new JLabel("Role:"));
         cmbRole = new JComboBox<>(new String[]{"User", "Administrator"});
@@ -71,6 +97,36 @@ public class LoginFrame extends JFrame {
                 System.exit(0);
             }
         });
+    }
+
+    private Icon createEyeIcon(boolean slashed) {
+        return new Icon() {
+            @Override
+            public int getIconWidth() {
+                return 16;
+            }
+
+            @Override
+            public int getIconHeight() {
+                return 16;
+            }
+
+            @Override
+            public void paintIcon(Component c, Graphics g, int x, int y) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(80, 80, 80));
+                g2.setStroke(new BasicStroke(1.5f));
+
+                g2.drawOval(x + 1, y + 4, 14, 8);
+                g2.fillOval(x + 6, y + 6, 4, 4);
+
+                if (slashed) {
+                    g2.drawLine(x + 2, y + 14, x + 14, y + 2);
+                }
+                g2.dispose();
+            }
+        };
     }
 
     private void performLogin() {
