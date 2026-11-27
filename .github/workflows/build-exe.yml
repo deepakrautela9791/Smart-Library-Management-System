@@ -1,0 +1,54 @@
+name: Build SmartLibrary Windows EXE
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download MySQL Connector/J
+        run: |
+          New-Item -ItemType Directory -Force -Path lib | Out-Null
+          Invoke-WebRequest -Uri "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar" -OutFile "lib/mysql-connector-j-8.4.0.jar"
+
+      - name: Compile Java sources
+        run: |
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          $sources = Get-ChildItem -Path src -Filter *.java -Recurse | ForEach-Object { $_.FullName }
+          javac -d build -cp "lib/*" $sources
+
+      - name: Create app.jar and prepare dist-jars
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-jars | Out-Null
+          @("Main-Class: Main", "Class-Path: mysql-connector-j-8.4.0.jar") | Set-Content -Path MANIFEST.MF -Encoding ASCII
+          jar cfm dist-jars/app.jar MANIFEST.MF -C build .
+          Copy-Item lib/mysql-connector-j-8.4.0.jar dist-jars/
+
+      - name: Build Windows app-image with jpackage
+        run: |
+          jpackage --type app-image --name SmartLibrary --input dist-jars --main-jar app.jar --main-class Main --dest output
+
+      - name: Copy db.properties.example and zip output
+        run: |
+          Copy-Item db.properties.example output/SmartLibrary/
+          Compress-Archive -Path output/SmartLibrary -DestinationPath SmartLibrary-windows.zip -Force
+
+      - name: Upload SmartLibrary-windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartLibrary-windows
+          path: SmartLibrary-windows.zip
