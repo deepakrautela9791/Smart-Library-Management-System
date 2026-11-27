@@ -1,0 +1,17 @@
+# Local database configuration
+db.properties
+
+# Build outputs and dependencies
+out/
+build/
+lib/
+*.class
+*.jar
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
