@@ -1,7 +1,8 @@
 -- Smart Library Management System Database Schema
 
-CREATE DATABASE IF NOT EXISTS sql12841039;
-USE sql12841039;
+-- Note: On a hosted DB (where CREATE DATABASE is not allowed), skip the next two lines.
+CREATE DATABASE IF NOT EXISTS smart_library_db;
+USE smart_library_db;
 
 -- 1. ADMIN Table
 CREATE TABLE IF NOT EXISTS ADMIN (
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS ADMIN (
 -- 2. BOOK Table
 CREATE TABLE IF NOT EXISTS BOOK (
     BookID INT PRIMARY KEY AUTO_INCREMENT,
+    ISBN VARCHAR(20),
     Title VARCHAR(150) NOT NULL,
     Author VARCHAR(100) NOT NULL,
     Category VARCHAR(50) NOT NULL,
@@ -22,6 +24,8 @@ CREATE TABLE IF NOT EXISTS BOOK (
     AdminID INT,
     FOREIGN KEY (AdminID) REFERENCES ADMIN(AdminID) ON DELETE SET NULL
 );
+-- Optional migration if BOOK table already exists without ISBN:
+-- ALTER TABLE BOOK ADD COLUMN ISBN VARCHAR(20) AFTER BookID;
 
 -- 3. STUDENT Table
 CREATE TABLE IF NOT EXISTS STUDENT (
