@@ -5,9 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12841039?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "sql12841039";
-    private static final String PASSWORD = "vF89x3GL5r";
+   private static final String URL = "jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/smart_library_db?sslMode=REQUIRED&serverTimezone=UTC";
+    private static final String USER = "3WdsqeqyyBo4FjG.root";
+    private static final String PASSWORD = "1k50kV2ql2iBRLhp";
 
     public static Connection getConnection() throws SQLException {
         try {
