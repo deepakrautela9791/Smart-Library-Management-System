@@ -1,7 +1,8 @@
 package ui;
 
 import db.DBConnection;
-import util.PasswordHasher;
+import util.SecurityUtil;
+import util.SessionManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -82,7 +83,7 @@ public class LoginFrame extends JFrame {
             return;
         }
 
-        String hashedPassword = PasswordHasher.hashPassword(password);
+        String hashedPassword = SecurityUtil.hashPassword(password);
         String sql = "SELECT AdminID FROM ADMIN WHERE Username = ? AND Password = ? AND Role = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -96,9 +97,18 @@ public class LoginFrame extends JFrame {
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        JOptionPane.showMessageDialog(this, "Login Successful! Welcome " + username, "Success", JOptionPane.INFORMATION_MESSAGE);
+                        int adminId = rs.getInt("AdminID");
+                        SessionManager.setSession("username", username);
+                        SessionManager.setSession("role", role);
+                        SessionManager.setSession("adminId", adminId);
+                        JOptionPane.showMessageDialog(this, "Login Successful! Welcome, " + username, "Success", JOptionPane.INFORMATION_MESSAGE);
                         dispose();
-                        new DashboardFrame(username, role).setVisible(true);
+
+                        if ("Administrator".equals(role)) {
+                            new AdminDashboard(adminId).setVisible(true);
+                        } else {
+                            new StudentDashboard().setVisible(true);
+                        }
                     } else {
                         JOptionPane.showMessageDialog(this, "Invalid username, password, or role.", "Login Failed", JOptionPane.ERROR_MESSAGE);
                     }
@@ -108,5 +118,11 @@ public class LoginFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new LoginFrame().setVisible(true);
+        });
     }
 }
